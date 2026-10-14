@@ -1,0 +1,203 @@
+"""Percepción: localizar el objeto de un color con la cámara (antes: Nivel 5 del notebook).
+
+Se conservan los rangos HSV y la lógica del notebook (máscara HSV + erosión/dilatación +
+contorno de mayor área + centroide), pero sin widgets de Jupyter, para que el broker la use.
+
+Del píxel a la mesa:
+  * Con calibracion_camara.json (lo genera calibrar_camara.py con los 4 cubos en sus
+    posiciones conocidas) se aplica una homografía píxel -> (x, y) mm.
+  * Sin calibración, la cámara solo CONFIRMA que el color está en la mesa y se usa la
+    posición conocida de ese color (DestinacionColores.POSICIONES_PICK).
+
+Prueba suelta (sin mover el brazo):  python3 -m arm_broker.CamaraColoresReconocimiento rojo
+"""
+
+import json
+import os
+import sys
+import threading
+import time
+
+try:
+    import cv2
+    import numpy as np
+except ImportError:  # el modo simulado no necesita OpenCV
+    cv2 = None
+    np = None
+
+CAMARA_INDEX = 0
+
+# Rangos HSV del notebook del equipo (OpenCV: H 0-179). Recalibrar con la luz del aula.
+RANGOS_COLORES = {
+    'rojo':     ([167, 98, 195], [179, 255, 255]),
+    'azul':     ([98, 195, 182], [118, 255, 255]),
+    'verde':    ([70, 134, 121], [90, 255, 255]),
+    'amarillo': ([16, 89, 180], [36, 255, 255]),
+}
+# El rojo da la vuelta al círculo de H: también se acepta H 0-8.
+RANGOS_EXTRA = {
+    'rojo': [([0, 98, 195], [8, 255, 255])],
+}
+
+AREA_MINIMA_CONTORNO = 2000
+
+
+def _mascara(hsv, color):
+    bajo, alto = RANGOS_COLORES[color]
+    m = cv2.inRange(hsv, np.array(bajo), np.array(alto))
+    for b, a in RANGOS_EXTRA.get(color, []):
+        m = cv2.bitwise_or(m, cv2.inRange(hsv, np.array(b), np.array(a)))
+    m = cv2.erode(m, None, iterations=2)
+    return cv2.dilate(m, None, iterations=2)
+
+
+def detectar(frame, color, area_minima=AREA_MINIMA_CONTORNO):
+    """Centroide (u, v) y área del contorno más grande del color, o None."""
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    m = _mascara(hsv, color)
+    contornos, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contornos:
+        return None
+    c = max(contornos, key=cv2.contourArea)
+    area = cv2.contourArea(c)
+    if area < area_minima:
+        return None
+    M = cv2.moments(c)
+    if M['m00'] == 0:
+        return None
+    return (M['m10'] / M['m00'], M['m01'] / M['m00'], float(area), c)
+
+
+def cargar_calibracion(ruta):
+    if not ruta or not os.path.exists(ruta):
+        return None
+    with open(ruta) as f:
+        datos = json.load(f)
+    datos['H'] = np.array(datos['H'], dtype=float)
+    return datos
+
+
+def pixel_a_mesa(H, u, v):
+    p = H @ np.array([u, v, 1.0])
+    return float(p[0] / p[2]), float(p[1] / p[2])
+
+
+class Camara:
+    """Cámara abierta todo el tiempo; un hilo guarda el último cuadro (percepción rápida)."""
+
+    def __init__(self, indice=CAMARA_INDEX, ancho=640, alto=480):
+        self.cap = cv2.VideoCapture(indice)
+        if ancho:
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, ancho)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, alto)
+        if not self.cap.isOpened():
+            raise RuntimeError(f'no se pudo abrir la cámara {indice}')
+        self._lock = threading.Lock()
+        self._frame = None
+        self._t = 0.0
+        self._parar = False
+        self._hilo = threading.Thread(target=self._leer, daemon=True)
+        self._hilo.start()
+
+    def _leer(self):
+        while not self._parar:
+            ok, f = self.cap.read()
+            if ok:
+                with self._lock:
+                    self._frame, self._t = f, time.time()
+            else:
+                time.sleep(0.02)
+
+    def cuadros_nuevos(self, n=5, despues_de=None, timeout=3.0):
+        """n cuadros capturados DESPUÉS de `despues_de` (cuando el brazo ya está quieto)."""
+        despues_de = time.time() if despues_de is None else despues_de
+        out, ultimo, t0 = [], despues_de, time.time()
+        while len(out) < n and time.time() - t0 < timeout:
+            with self._lock:
+                f, t = self._frame, self._t
+            if f is not None and t > ultimo:
+                out.append(f.copy())
+                ultimo = t
+            else:
+                time.sleep(0.01)
+        return out
+
+    def cerrar(self):
+        self._parar = True
+        try:
+            self.cap.release()
+        except Exception:
+            pass
+
+
+def localizar(camara, color, calibracion=None, n_cuadros=5, area_minima=AREA_MINIMA_CONTORNO,
+              guardar_en=None, despues_de=None):
+    """Busca `color` en n cuadros y devuelve un dict:
+    encontrado, u, v (mediana de píxeles), xy_mm (si hay calibración), area, n_detecciones,
+    imagen (ruta de la imagen anotada) y motivo si no se encontró.
+    """
+    cuadros = camara.cuadros_nuevos(n_cuadros, despues_de=despues_de)
+    if not cuadros:
+        return {'encontrado': False, 'motivo': 'la cámara no entrega imágenes'}
+    dets = [d for d in (detectar(f, color, area_minima) for f in cuadros) if d is not None]
+    res = {'encontrado': False, 'n_detecciones': len(dets), 'n_cuadros': len(cuadros),
+           'xy_mm': None, 'imagen': ''}
+    frame = cuadros[-1].copy()
+    if len(dets) >= max(1, len(cuadros) // 2 + 1):
+        us = sorted(d[0] for d in dets)
+        vs = sorted(d[1] for d in dets)
+        u, v = us[len(us) // 2], vs[len(vs) // 2]
+        res.update(encontrado=True, u=u, v=v, area=float(dets[-1][2]))
+        if calibracion is not None:
+            res['xy_mm'] = pixel_a_mesa(calibracion['H'], u, v)
+        cv2.drawContours(frame, [dets[-1][3]], -1, (0, 255, 0), 2)
+        cv2.circle(frame, (int(u), int(v)), 6, (255, 0, 0), -1)
+        texto = color.upper()
+        if res['xy_mm']:
+            texto += ' (%.0f, %.0f) mm' % res['xy_mm']
+        cv2.putText(frame, texto, (int(u) - 40, int(v) - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    else:
+        res['motivo'] = (f'la cámara no encontró ningún objeto {color} '
+                         f'({len(dets)}/{len(cuadros)} cuadros con detección)')
+        cv2.putText(frame, f'NO SE VE {color.upper()}', (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+    if guardar_en:
+        os.makedirs(os.path.dirname(guardar_en) or '.', exist_ok=True)
+        cv2.imwrite(guardar_en, frame)
+        res['imagen'] = guardar_en
+    return res
+
+
+class CamaraSimulada:
+    """Para el ensayo sin hardware: 've' los colores en sus posiciones conocidas."""
+
+    def __init__(self, posiciones, ausentes=()):
+        self.posiciones = posiciones
+        self.ausentes = set(ausentes)
+
+    def cerrar(self):
+        pass
+
+
+def localizar_simulado(cam, color):
+    time.sleep(0.15)
+    if color in cam.ausentes or color not in cam.posiciones:
+        return {'encontrado': False, 'motivo': f'la cámara (simulada) no encontró ningún objeto {color}',
+                'xy_mm': None, 'imagen': ''}
+    return {'encontrado': True, 'xy_mm': tuple(cam.posiciones[color]), 'u': -1, 'v': -1,
+            'imagen': '', 'n_detecciones': 5, 'n_cuadros': 5}
+
+
+if __name__ == '__main__':
+    # Prueba de la cámara sola: python3 -m arm_broker.CamaraColoresReconocimiento [color ...]
+    colores = sys.argv[1:] or list(RANGOS_COLORES)
+    cal = cargar_calibracion(os.environ.get('ARM_BROKER_CALIBRACION', 'calibracion_camara.json'))
+    cam = Camara()
+    try:
+        time.sleep(1.0)
+        for c in colores:
+            r = localizar(cam, c, cal, guardar_en=f'deteccion_{c}.jpg')
+            print(c, '->', {k: v for k, v in r.items() if k != 'imagen'}, '| imagen:', r.get('imagen'))
+    finally:
+        cam.cerrar()

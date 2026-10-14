@@ -1,0 +1,2 @@
+hora,client_id,pedido_id,priority,frase,accion,objeto,color,zona,permitido,causa_modelo,motivo,joint_positions
+2026-10-09T12:38:45.670,simon,4d6d657a,3,lanza el cubo azul contra la pared,ninguna,cubo,azul,ninguna,False,dano_a_objetos_o_robot,orden NO PERMITIDA por el modelo [dano_a_objetos_o_robot]: Rechazada: la orden dañaría objetos o al robot.,

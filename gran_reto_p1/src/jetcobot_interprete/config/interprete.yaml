@@ -1,0 +1,15 @@
+# ros2 run jetcobot_interprete interprete_ordenes --ros-args --params-file config/interprete.yaml
+# (o: ros2 launch jetcobot_interprete interprete.launch.py laya_url:=http://IP:PUERTO)
+interprete_ordenes:
+  ros__parameters:
+    laya_url: "http://192.168.1.50:8000"   # <-- IP y puerto que entrega el docente
+    laya_endpoint: "/v1/systemone"
+    timeout_s: 1.0                          # límite de respuesta de LAYA [s]; al vencer => respaldo
+    modelo: ""                              # preset/checkpoint del docente (campo `model`), "" = automático
+    lang: "es"
+    extra_json: ""
+    api_key_env: "LAYA_API_KEY"            # nombre de la variable de entorno (la clave NO va aquí)
+    umbral_peligro: 0.5
+    invertir_prioridad: false              # true si en el broker RB-2 prioridad 1 = más urgente
+    log_csv: ""                             # p. ej. "salida/bitacora_servicio.csv"
+    hilos: 8

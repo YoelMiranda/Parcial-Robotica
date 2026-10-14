@@ -1,0 +1,8 @@
+# Ensayo SIN hardware: no abre el puerto ni la cámara. Las filas quedan marcadas simulado=True.
+arm_broker:
+  ros__parameters:
+    simular: true
+    politica: "prioridad"
+    usar_moveit: false
+    carpeta_evidencia: "evidencia_p2_simulado"
+    colores_ausentes_sim: ""         # p. ej. "verde" para probar "la cámara no encontró..."

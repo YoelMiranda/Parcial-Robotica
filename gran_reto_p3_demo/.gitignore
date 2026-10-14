@@ -1,0 +1,11 @@
+# claves y secretos: JAMAS al repositorio
+.env
+*.key
+*secret*
+GOOGLE_API_KEY*
+# compilacion
+build/
+install/
+log/
+__pycache__/
+.ipynb_checkpoints/

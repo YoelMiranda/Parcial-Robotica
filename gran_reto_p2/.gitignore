@@ -1,0 +1,11 @@
+build/
+install/
+log/
+__pycache__/
+*.pyc
+.env
+*.key
+*secret*
+# los bags pesan: súbanlos al aula virtual / Drive y pongan el enlace en el README
+*.db3
+*.mcap

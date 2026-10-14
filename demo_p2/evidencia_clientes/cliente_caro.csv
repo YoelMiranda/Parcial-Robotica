@@ -1,0 +1,3 @@
+timestamp,client_id,pedido_id,frase,accion,objeto,color,zona,prioridad,permitido,causa,fuente,degradado,latencia_decision_ms,t_origen_epoch,t_envio_epoch,aceptado,motivo_rechazo_broker,resultado,mensaje,espera_s,ejecucion_s,error_fk_mm,planificador,t_fin_epoch
+2026-10-09T09:50:55.330,caro,bee23cc0,urgente: mueve el cubo amarillo ya,detener,cubo,amarillo,ninguna,5,True,ninguna,laya,False,260.6,0.0,1791557456.8823445,False,orden de PARADA: no hay ningún pedido en ejecución,rechazado,,,,,,
+2026-10-09T10:27:17.690,caro,2bb51730,urgente: mueve el cubo amarillo ya,detener,cubo,amarillo,ninguna,5,True,ninguna,laya,False,464.0,0.0,1791559639.2282188,False,orden de PARADA: no hay ningún pedido en ejecución,rechazado,,,,,,

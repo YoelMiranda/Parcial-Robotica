@@ -1,0 +1,27 @@
+# Servicio /interpretar_orden
+# Traduce una frase en español a una DECISIÓN TIPADA. Ningún campo es texto
+# libre generado por un modelo: todo valor proviene de un conjunto cerrado.
+
+# ---- Petición ----
+string frase
+---
+# ---- Respuesta: decisión ----
+string accion          # recoger | depositar | ir_home | detener | ninguna
+string objeto          # cubo | esfera | cilindro | ninguno
+string color           # rojo | azul | verde | amarillo | ninguno
+string zona            # zona_a | zona_b | zona_c | ninguna
+int32  prioridad       # 1 (baja) .. 5 (máxima urgencia)
+bool   permitido       # false => el broker debe rechazar la orden
+string causa           # etiqueta cerrada: ninguna | riesgo_personas | dano_a_objetos_o_robot | desactiva_seguridad | fuera_de_zona_de_trabajo | frase_vacia
+string motivo_rechazo  # texto FIJO tomado de una tabla (vacío si permitido)
+
+# ---- Respuesta: trazabilidad ----
+bool   degradado       # true => LAYA no respondió a tiempo/falló; decidió el clasificador por palabras clave
+string fuente          # laya | palabras_clave | validacion
+string detalle_error   # causa técnica de la degradación (vacío si no hubo)
+
+# ---- Respuesta: latencias [ms]; -1.0 = no disponible ----
+float64 latencia_total_ms     # dentro del nodo: entra la petición -> decisión lista
+float64 latencia_rtt_ms       # ida y vuelta HTTP hacia LAYA (envío -> cuerpo recibido)
+float64 latencia_servidor_ms  # cálculo del modelo según el servidor (X-Inference-Time-Ms)
+float64 latencia_red_ms       # rtt - servidor (red + serialización + cola en el servidor)

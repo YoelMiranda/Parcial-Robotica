@@ -1,0 +1,59 @@
+# Configuración del broker para la Pregunta 2.
+#   ros2 run arm_broker broker --ros-args --params-file ~/gran_reto_p2/src/arm_broker/config/broker_p2.yaml
+# Las listas van como TEXTO ("x, y") a propósito: así ROS no se queja de int vs double.
+# Todo lo marcado MEDIR se mide en la mesa del examen con el notebook (paso 6 de la guía).
+arm_broker:
+  ros__parameters:
+    # --- cola (RB-2) ---
+    politica: "prioridad"            # prioridad con envejecimiento: mayor número = más urgente
+    tau_envejecimiento_s: 8.0
+    cola_max: 20
+
+    # --- brazo (solo el broker abre el puerto) ---
+    simular: false
+    puerto_brazo: "/dev/ttyTHS1"
+    baudios: 1000000
+    velocidad: 40                    # MEDIR: VELOCIDAD_SEGURA del notebook
+    gripper_abierto: 100             # MEDIR: GRIPPER_ABIERTO del notebook
+    gripper_cerrado: 25              # MEDIR: GRIPPER_CERRADO (que apriete el cubo sin forzar)
+    t_pinza_s: 1.5
+
+    # --- MoveIt 2 (solo planifica; el broker ejecuta) ---
+    usar_moveit: true
+    exigir_moveit: false             # true: si MoveIt falla, el intento se aborta
+    moveit_grupo: "arm_group"        # MEDIR: paso 7 de la guía
+    nombres_articulaciones: ""       # "" = autodetectar desde move_group
+    moveit_tiempo_s: 2.0
+    moveit_escala_velocidad: 0.5
+
+    # --- cámara ---
+    camara_indice: 0
+    calibracion_camara: "calibracion_camara.json"   # relativo a la carpeta donde se lanza el broker
+    modo_posicion: "slot"            # slot: la cámara elige cuál de las posiciones conocidas
+    tolerancia_slot_mm: 45.0
+
+    # --- pose de observación (= reposo entre pedidos) ---
+    pose_observacion_grados: "19.42, 4.48, -62.49, -29.97, 0.7, -39.63"      # MEDIR: 6 ángulos del notebook con la cámara mirando el cuadrado
+    pose_observacion_mm: "210, 5, 240"
+    yaw_pinza_extra_deg: 0.0         # 45.0 si la pinza queda en diagonal respecto a los cubos
+
+    # --- mesa ---
+    objetos_en_mesa: "cubo"          # lo que REALMENTE hay; "esfera", "cilindro"... se rechazan
+    objeto_por_defecto: "cubo"
+    destino_si_falta: "mismo_color"  # sin zona en la frase -> cuadro del mismo color
+    zona_a: ""                       # zonas de la P1 -> cuadro de color ("" = no existe)
+    zona_b: "azul"                   # el cuadro B del tapete
+    zona_c: ""
+    destino_azul: "-60, 240"         # cuadros B G R Y (notebook)
+    destino_verde: "0, 240"
+    destino_rojo: "80, 240"
+    destino_amarillo: "130, 240"
+    pick_rojo: "189.4, -45.5"             # MEDIR: posiciones conocidas de los 4 cubos
+    pick_azul: "241.6, 53.1"
+    pick_verde: "176.6, 57.9"
+    pick_amarillo: "247.1, -37.3"
+    z_agarre: 110.0                  # notebook
+    z_seguro: 140.0                  # notebook (ALTURA_INTERMEDIA_Z)
+    z_soltar: 115.0
+
+    carpeta_evidencia: "evidencia_p2"

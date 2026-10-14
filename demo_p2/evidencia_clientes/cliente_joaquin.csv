@@ -1,0 +1,2 @@
+timestamp,client_id,pedido_id,frase,accion,objeto,color,zona,prioridad,permitido,causa,fuente,degradado,latencia_decision_ms,t_origen_epoch,t_envio_epoch,aceptado,motivo_rechazo_broker,resultado,mensaje,espera_s,ejecucion_s,error_fk_mm,planificador,t_fin_epoch
+2026-10-09T12:38:48.076,joaquin,5e309cac,toma el cubo verde,recoger,cubo,verde,ninguna,3,True,ninguna,laya+reglas,False,218.3,0.0,1791567528.305239,True,,ok,ok,23.957,44.521,4.46,"mixto(moveit,interpolacion,interpolacion,interpolacion,moveit,moveit,moveit)",1791567596.8004022

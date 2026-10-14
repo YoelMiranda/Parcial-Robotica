@@ -1,0 +1,45 @@
+# Acción move_arm del broker (RB-2 extendida para la Pregunta 2).
+# Los campos del RB-2 se conservan: un cliente del RB-2 sigue funcionando (modo articular).
+
+# ======================== GOAL ========================
+# --- RB-2 ---
+float64[] joint_positions     # modo "articular": 6 ángulos [rad]
+string client_id
+int32 priority                # 1 = sin urgencia ... 5 = emergencia (mayor = más urgente)
+# --- P2: la decisión de /interpretar_orden viaja completa ---
+string modo                   # "articular" (RB-2) | "agarre" | "home"   ("" = articular)
+string pedido_id              # id corto que genera el cliente (para casar eventos y CSV)
+string frase                  # la frase original del operador
+string accion                 # recoger | depositar | ir_home | detener | ninguna
+string objeto                 # cubo | esfera | cilindro | ninguno
+string color                  # rojo | azul | verde | amarillo | ninguno
+string zona                   # zona_a | zona_b | zona_c | ninguna
+bool permitido                # false => el broker rechaza ANTES de encolar
+string causa                  # etiqueta cerrada de la causa de rechazo
+string motivo_rechazo         # texto fijo de la P1
+bool degradado                # la decisión vino del respaldo por palabras clave
+string fuente                 # laya | palabras_clave | validacion
+float64 latencia_decision_ms  # latencia_total_ms del servicio /interpretar_orden
+float64 t_origen_epoch        # P3: instante en que el operador terminó de hablar (0 = no aplica)
+float64 t_envio_epoch         # instante en que el cliente envía el goal
+---
+# ======================== RESULT ========================
+bool success
+string message
+float64 wait_time_s
+float64 exec_time_s
+# --- P2 ---
+string destino                # cuadro de destino (azul | verde | rojo | amarillo)
+string planificador           # moveit | interpolacion | simulado
+float64 error_fk_mm           # |pos solicitada - FK(ángulos leídos)| en el punto de entrega (-1 = n/d)
+float64 t_percepcion_s
+float64 t_ik_s
+float64 t_planificacion_s
+float64 t_movimiento_s
+float64 inicio_movimiento_epoch
+---
+# ======================== FEEDBACK ========================
+string state                  # QUEUED | EXECUTING
+uint32 queue_position
+float64 elapsed_s
+string etapa                  # preparacion | percepcion | ik | planificacion | movimiento | reposo

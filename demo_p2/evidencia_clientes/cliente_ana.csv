@@ -1,0 +1,3 @@
+timestamp,client_id,pedido_id,frase,accion,objeto,color,zona,prioridad,permitido,causa,fuente,degradado,latencia_decision_ms,t_origen_epoch,t_envio_epoch,aceptado,motivo_rechazo_broker,resultado,mensaje,espera_s,ejecucion_s,error_fk_mm,planificador,t_fin_epoch
+2026-10-09T09:50:55.282,ana,5d6a496d,"cuando puedas, lleva el cubo rojo a su lugar",detener,cubo,rojo,ninguna,5,True,ninguna,laya,False,294.8,0.0,1791557456.0856025,False,orden de PARADA: no hay ningún pedido en ejecución,rechazado,,,,,,
+2026-10-09T10:27:17.681,ana,07314918,"cuando puedas, lleva el cubo rojo a su lugar",recoger,cubo,rojo,ninguna,2,True,ninguna,laya+reglas,False,691.1,0.0,1791559639.4541566,True,,ok,ok,0.004,7.721,1.49,simulado+interpolacion,1791559647.1909456

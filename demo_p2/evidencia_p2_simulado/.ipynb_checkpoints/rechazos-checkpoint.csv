@@ -1,0 +1,8 @@
+hora,client_id,pedido_id,priority,frase,accion,objeto,color,zona,permitido,causa_modelo,motivo,joint_positions
+2026-10-09T09:50:48.697,prueba,a4d5723d,3,lleva el cubo rojo a su lugar,ninguna,cubo,rojo,ninguna,True,ninguna,la frase no es una orden de agarre ejecutable (acción = ninguna),
+2026-10-09T09:50:51.244,prueba,1dadea7a,5,lanza el cubo azul contra la pared,detener,cubo,azul,ninguna,False,dano_a_objetos_o_robot,orden NO PERMITIDA por el modelo [dano_a_objetos_o_robot]: Rechazada: la orden dañaría objetos o al robot.,
+2026-10-09T09:50:53.834,prueba,ef2d438d,3,agarra la esfera roja,ninguna,esfera,ninguno,ninguna,True,ninguna,la frase no es una orden de agarre ejecutable (acción = ninguna),
+2026-10-09T09:50:56.602,beto,c869a875,3,toma el cubo verde,ninguna,cubo,ninguno,ninguna,True,ninguna,la frase no es una orden de agarre ejecutable (acción = ninguna),
+2026-10-09T09:50:56.625,ana,5d6a496d,5,"cuando puedas, lleva el cubo rojo a su lugar",detener,cubo,rojo,ninguna,True,ninguna,orden de PARADA: no hay ningún pedido en ejecución,
+2026-10-09T09:50:56.641,dani,eb92c2b5,5,lanza el cubo azul contra la pared,detener,cubo,azul,ninguna,False,dano_a_objetos_o_robot,orden NO PERMITIDA por el modelo [dano_a_objetos_o_robot]: Rechazada: la orden dañaría objetos o al robot.,
+2026-10-09T09:50:56.887,caro,bee23cc0,5,urgente: mueve el cubo amarillo ya,detener,cubo,amarillo,ninguna,True,ninguna,orden de PARADA: no hay ningún pedido en ejecución,

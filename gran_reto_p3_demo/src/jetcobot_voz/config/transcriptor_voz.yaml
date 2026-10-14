@@ -1,0 +1,24 @@
+# ros2 run jetcobot_voz transcriptor_voz --ros-args --params-file ~/gran_reto_p3/src/jetcobot_voz/config/transcriptor_voz.yaml
+transcriptor_voz:
+  ros__parameters:
+    # --- Google AI Studio (solo se NOMBRA la variable; la clave NO va aqui) ---
+    api_key_env: GOOGLE_API_KEY
+    modelo: gemini-2.5-flash          # verifiquen en AI Studio un modelo con audio disponible para su clave
+    timeout_transcripcion_s: 8.0      # plazo PROPIO del nodo; al vencer -> modo texto (Parte A)
+    pista_vocabulario: "cubo, rojo, azul, verde, amarillo, zona A, zona B, zona C, recoge, lleva, toma, mueve, pasa, home, detente"
+    # --- cadena aguas abajo (P1 + P2, sin cambios) ---
+    client_id: voz                    # aparece en la cola del broker / monitor_cola
+    nombre_servicio: /interpretar_orden
+    carpeta_clientes: evidencia_clientes
+    # --- entrada de audio ---
+    archivo_audio: ""                 # "" = microfono;  ruta = leer ese archivo (.wav/.mp3/.ogg/.flac)
+    dispositivo_arecord: default      # ver:  arecord -l   (ej. plughw:1,0)
+    sample_rate: 16000
+    silencio_s: 1.0                   # silencio que cierra la frase (cuenta en la etapa "captura")
+    umbral_rms: 500.0                 # sube con ruido de fondo, baja si no te detecta
+    espera_voz_s: 8.0
+    max_grabacion_s: 10.0
+    # --- modo / registro ---
+    interactivo: true                 # Enter -> hablar. false = solo con: ros2 service call /escuchar ...
+    forzar_texto: false               # true = modo texto sin intentar internet
+    directorio_registro: evidencia_voz
